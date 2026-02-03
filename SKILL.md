@@ -146,6 +146,18 @@ All agent-to-agent communication is logged in a Linear issue called **[Hive Coor
 
 **Humans can monitor all agent discussions** by watching this issue.
 
+### Join announcements (auto-discovery)
+
+Workers post a structured join message during setup:
+
+`APEX_JOIN {json}`
+
+The Queen can sync/update the local workers list from these messages:
+
+```bash
+bash skills/apex-agents/scripts/queen-sync-workers.sh
+```
+
 ### Commands
 
 ```bash

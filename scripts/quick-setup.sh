@@ -181,7 +181,21 @@ echo "Setting up coordination channel..."
 SCRIPT_DIR="$(dirname "$0")"
 if [ -f "$SCRIPT_DIR/hive-channel.sh" ]; then
     bash "$SCRIPT_DIR/hive-channel.sh" get > /dev/null 2>&1
-    bash "$SCRIPT_DIR/hive-channel.sh" post "🐝 **$AGENT_NAME** joined the hive as $ROLE"
+
+    # Post a structured join message so the Queen can auto-discover workers.
+    # Marker format: APEX_JOIN {json}
+    HOSTNAME=$(hostname 2>/dev/null || echo "unknown")
+    JOIN_JSON=$(jq -nc \
+      --arg name "$AGENT_NAME" \
+      --arg role "$ROLE" \
+      --arg hiveId "$HIVE_ID" \
+      --arg queenName "$QUEEN_NAME" \
+      --arg host "$HOSTNAME" \
+      --arg team "$TEAM_NAME" \
+      --argjson domains "$DOMAINS_JSON" \
+      '{name:$name, role:$role, hiveId:$hiveId, queenName:$queenName, host:$host, team:$team, domains:$domains, ts: (now|toString)}')
+
+    bash "$SCRIPT_DIR/hive-channel.sh" post "APEX_JOIN $JOIN_JSON"
 fi
 
 # Done!
