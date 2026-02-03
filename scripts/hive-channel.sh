@@ -122,10 +122,16 @@ case "$ACTION" in
             exit 1
         fi
         
-        # Format message with agent name and timestamp
-        FORMATTED="**🐝 $AGENT_NAME** _($(date +%H:%M))_
+        # If this is a structured machine-readable marker (e.g. APEX_JOIN/APEX_PRESENCE),
+        # post it raw so it can be parsed reliably from the beginning of the comment body.
+        if echo "$MESSAGE" | grep -q '^APEX_'; then
+            FORMATTED="$MESSAGE"
+        else
+            # Human-readable message
+            FORMATTED="**🐝 $AGENT_NAME** _($(date +%H:%M))_
 
 $MESSAGE"
+        fi
         
         COMMENT_MUTATION='
         mutation AddComment($issueId: String!, $body: String!) {

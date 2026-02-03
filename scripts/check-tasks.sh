@@ -18,6 +18,13 @@ API_KEY=$(jq -r '.linear.apiKey' "$CONFIG_FILE")
 TEAM_ID=$(jq -r '.linear.teamId' "$CONFIG_FILE")
 AGENT_NAME=$(jq -r '.agent.name' "$CONFIG_FILE")
 APPROVAL_REQUIRED=$(jq -r '.settings.approvalRequired' "$CONFIG_FILE")
+ROLE=$(jq -r '.agent.role // "worker"' "$CONFIG_FILE")
+
+# Post worker presence for inactivity monitoring (best-effort)
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+if [ "$ROLE" = "worker" ] && [ -x "$SCRIPT_DIR/worker-presence.sh" ]; then
+  "$SCRIPT_DIR/worker-presence.sh" >/dev/null 2>&1 || true
+fi
 
 # Initialize state file if needed
 if [ ! -f "$STATE_FILE" ]; then

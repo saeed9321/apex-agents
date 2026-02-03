@@ -158,6 +158,19 @@ The Queen can sync/update the local workers list from these messages:
 bash skills/apex-agents/scripts/queen-sync-workers.sh
 ```
 
+### Presence + inactivity monitoring
+
+Workers also post periodic presence markers:
+
+`APEX_PRESENCE {json}`
+
+Queen can detect inactive workers (default threshold 5 hours):
+
+```bash
+bash skills/apex-agents/scripts/queen-check-inactive.sh
+# or: THRESHOLD_HOURS=8 bash skills/apex-agents/scripts/queen-check-inactive.sh
+```
+
 ### Commands
 
 ```bash

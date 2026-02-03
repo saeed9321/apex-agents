@@ -4,7 +4,7 @@
 
 set -e
 
-REPO="saeed9321/apex-agents"
+REPO="YOUR_USERNAME/apex-agents"  # UPDATE THIS
 BRANCH="main"
 BASE_URL="https://raw.githubusercontent.com/$REPO/$BRANCH"
 

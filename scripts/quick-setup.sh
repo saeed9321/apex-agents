@@ -23,7 +23,8 @@ echo "├───────────────────────�
 echo "│  [Q] Queen  - You coordinate the hive   │"
 echo "│  [W] Worker - You execute tasks         │"
 echo "└─────────────────────────────────────────┘"
-read -p "Enter Q or W: " ROLE_CHOICE
+read -p "Enter Q or W [W]: " ROLE_CHOICE
+ROLE_CHOICE=${ROLE_CHOICE:-W}
 
 case "$ROLE_CHOICE" in
     [Qq]) ROLE="queen" ;;
@@ -178,25 +179,65 @@ chmod 600 "$CONFIG_FILE"
 # Create coordination channel
 echo ""
 echo "Setting up coordination channel..."
-SCRIPT_DIR="$(dirname "$0")"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 if [ -f "$SCRIPT_DIR/hive-channel.sh" ]; then
     bash "$SCRIPT_DIR/hive-channel.sh" get > /dev/null 2>&1
 
-    # Post a structured join message so the Queen can auto-discover workers.
-    # Marker format: APEX_JOIN {json}
-    HOSTNAME=$(hostname 2>/dev/null || echo "unknown")
-    JOIN_JSON=$(jq -nc \
-      --arg name "$AGENT_NAME" \
-      --arg role "$ROLE" \
-      --arg hiveId "$HIVE_ID" \
-      --arg queenName "$QUEEN_NAME" \
-      --arg host "$HOSTNAME" \
-      --arg team "$TEAM_NAME" \
-      --argjson domains "$DOMAINS_JSON" \
-      '{name:$name, role:$role, hiveId:$hiveId, queenName:$queenName, host:$host, team:$team, domains:$domains, ts: (now|toString)}')
-
-    bash "$SCRIPT_DIR/hive-channel.sh" post "APEX_JOIN $JOIN_JSON"
+    # Auto-join behavior:
+    # - Workers post APEX_JOIN so the Queen can discover them
+    # - Workers also post APEX_PRESENCE for inactivity monitoring
+    if [ "$ROLE" = "worker" ]; then
+        bash "$SCRIPT_DIR/worker-join.sh" >/dev/null 2>&1 || true
+        bash "$SCRIPT_DIR/worker-presence.sh" >/dev/null 2>&1 || true
+    fi
 fi
+
+# Optional: auto-add heartbeat snippets if a HEARTBEAT.md exists nearby
+add_heartbeat_snippet() {
+  local hb
+  for hb in "./HEARTBEAT.md" "../HEARTBEAT.md"; do
+    if [ -f "$hb" ]; then
+      if grep -q "^## Apex Agents" "$hb"; then
+        return 0
+      fi
+
+      echo "" >> "$hb"
+      echo "## Apex Agents (every 30 min)" >> "$hb"
+      echo "" >> "$hb"
+
+      if [ "$ROLE" = "worker" ]; then
+        cat >> "$hb" <<'EOF'
+Run:
+
+```bash
+bash skills/apex-agents/scripts/check-tasks.sh
+```
+
+- This will also post worker presence to the Hive Coordination channel.
+- If approval is required, ask the human before executing.
+EOF
+      else
+        cat >> "$hb" <<'EOF'
+Run:
+
+```bash
+bash skills/apex-agents/scripts/queen-sync-workers.sh
+bash skills/apex-agents/scripts/queen-check-inactive.sh
+```
+
+- Sync new worker join events from Linear
+- If any workers are reported INACTIVE (>5h), ping the Queen on Telegram
+EOF
+      fi
+
+      echo "" >> "$hb"
+      echo "---" >> "$hb"
+      return 0
+    fi
+  done
+}
+
+add_heartbeat_snippet || true
 
 # Done!
 echo ""
