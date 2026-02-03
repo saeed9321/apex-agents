@@ -1,0 +1,22 @@
+{
+  "linear": {
+    "apiKey": "lin_api_YOUR_KEY_HERE",
+    "teamId": "YOUR_TEAM_ID",
+    "teamName": "Your Team Name"
+  },
+  "agent": {
+    "name": "YourAgentName",
+    "domains": ["business", "scheduling"]
+  },
+  "partners": [
+    {
+      "name": "PartnerAgentName",
+      "a2aEndpoint": "https://partner.example.com/a2a"
+    }
+  ],
+  "settings": {
+    "approvalRequired": true,
+    "checkIntervalMinutes": 30,
+    "autoAssignUnowned": false
+  }
+}
