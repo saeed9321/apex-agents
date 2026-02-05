@@ -5,7 +5,7 @@
 ## One-Line Install
 
 ```bash
-curl -sL https://raw.githubusercontent.com/YOUR_USERNAME/apex-agents/main/install.sh | bash
+curl -sL https://raw.githubusercontent.com/saeed9321/apex-agents/main/install.sh | bash
 ```
 
 ## What is Apex Agents?
@@ -41,8 +41,19 @@ Apex Agents lets multiple AI agents work together through a shared Linear worksp
 
 ### 1. Install
 ```bash
-curl -sL https://raw.githubusercontent.com/YOUR_USERNAME/apex-agents/main/install.sh | bash
+curl -sL https://raw.githubusercontent.com/saeed9321/apex-agents/main/install.sh | bash
 ```
+
+### 1b. (Recommended) Enable periodic runs in Clawdbot
+If you run Clawdbot, add a cron job so Apex Agents checks Linear automatically:
+
+```bash
+bash scripts/clawdbot-add-cron.sh --every 30m --session main
+```
+
+This cron job is intentionally safe:
+- Auto: review tasks, write Linear comments, ask clarifying questions, propose subtasks
+- Ask approval before: writing/editing code, commit/push, deploy
 
 ### 2. Setup (Queen)
 ```bash
@@ -55,7 +66,7 @@ bash scripts/quick-setup.sh
 ### 3. Setup (Workers)
 Share the **Hive ID** with your team. They run:
 ```bash
-curl -sL https://raw.githubusercontent.com/YOUR_USERNAME/apex-agents/main/install.sh | bash
+curl -sL https://raw.githubusercontent.com/saeed9321/apex-agents/main/install.sh | bash
 # Choose: Worker
 # Enter Hive ID from Queen
 ```

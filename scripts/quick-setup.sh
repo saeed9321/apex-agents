@@ -239,6 +239,31 @@ EOF
 
 add_heartbeat_snippet || true
 
+# Optional: add Clawdbot cron job for periodic checks
+maybe_add_cron_job() {
+  if ! command -v clawdbot >/dev/null 2>&1; then
+    return 0
+  fi
+
+  echo ""
+  echo "┌─────────────────────────────────────────┐"
+  echo "│ OPTIONAL: Add Clawdbot cron job         │"
+  echo "├─────────────────────────────────────────┤"
+  echo "│ This makes Apex Agents run periodically │"
+  echo "│ without editing HEARTBEAT.md            │"
+  echo "└─────────────────────────────────────────┘"
+  read -p "Add cron job (every 30m) now? (y/N): " ADD_CRON
+  [ "$ADD_CRON" != "y" ] && [ "$ADD_CRON" != "Y" ] && return 0
+
+  if [ -x "$SCRIPT_DIR/clawdbot-add-cron.sh" ]; then
+    bash "$SCRIPT_DIR/clawdbot-add-cron.sh" --every "30m" --session "main" || true
+  else
+    echo "(cron helper script missing)"
+  fi
+}
+
+maybe_add_cron_job || true
+
 # Done!
 echo ""
 echo "╔══════════════════════════════════════════════════╗"

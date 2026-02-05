@@ -4,7 +4,7 @@
 
 set -e
 
-REPO="YOUR_USERNAME/apex-agents"  # UPDATE THIS
+REPO="saeed9321/apex-agents"
 BRANCH="main"
 BASE_URL="https://raw.githubusercontent.com/$REPO/$BRANCH"
 
@@ -47,6 +47,7 @@ FILES=(
     "scripts/quick-setup.sh"
     "scripts/setup.sh"
     "scripts/check-tasks.sh"
+    "scripts/clawdbot-add-cron.sh"
     "scripts/update-task.sh"
     "scripts/test-connection.sh"
     "scripts/queen-decompose.sh"

@@ -14,6 +14,15 @@ Coordinate multiple AI agents through a shared Linear workspace. Agents can plan
 bash skills/apex-agents/scripts/quick-setup.sh
 ```
 
+Optionally (recommended for Clawdbot): add a cron job so tasks are checked automatically:
+```bash
+bash skills/apex-agents/scripts/clawdbot-add-cron.sh --every 30m --session main
+```
+
+The cron job is written with a safe default behavior:
+- Auto: review tasks, write Linear comments, ask clarifying questions, propose subtasks
+- Ask approval before: writing/editing code, commit/push, deploy
+
 That's it! The wizard will:
 1. Ask if you're Queen or Worker
 2. Connect to Linear
