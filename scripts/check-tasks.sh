@@ -31,7 +31,31 @@ if [ ! -f "$STATE_FILE" ]; then
     echo '{"lastCheck": 0, "processedTasks": []}' > "$STATE_FILE"
 fi
 
-# GraphQL query to get assigned issues
+# Resolve the Linear "viewer" (current API key identity). This is the most reliable
+# way to detect "my" tasks, since assignee name may differ from config.agent.name.
+VIEWER_QUERY='{
+  viewer {
+    id
+    name
+    email
+  }
+}'
+
+VIEWER_RESP=$(curl -s -X POST https://api.linear.app/graphql \
+    -H "Content-Type: application/json" \
+    -H "Authorization: $API_KEY" \
+    -d "$(jq -n --arg query "$VIEWER_QUERY" '{query: $query}')")
+
+if echo "$VIEWER_RESP" | grep -q '"errors"'; then
+  echo "❌ API Error (viewer):"
+  echo "$VIEWER_RESP" | jq '.errors'
+  exit 1
+fi
+
+VIEWER_EMAIL=$(echo "$VIEWER_RESP" | jq -r '.data.viewer.email // empty')
+VIEWER_NAME=$(echo "$VIEWER_RESP" | jq -r '.data.viewer.name // empty')
+
+# GraphQL query to get active issues
 QUERY='
 query GetAssignedIssues($teamId: String!) {
   team(id: $teamId) {
@@ -98,10 +122,11 @@ ISSUE_COUNT=$(echo "$ISSUES" | jq 'length')
 
 echo "📋 Found $ISSUE_COUNT active issues in team"
 
-# Filter for tasks assigned to this agent (by name in comments/labels or assignee)
-# For now, we look for tasks with agent name mentioned or labeled
-MY_TASKS=$(echo "$ISSUES" | jq --arg agent "$AGENT_NAME" '
+# Filter for tasks assigned to this agent.
+# Prefer matching by assignee email (viewer), then fall back to name/mentions.
+MY_TASKS=$(echo "$ISSUES" | jq --arg agent "$AGENT_NAME" --arg viewerEmail "$VIEWER_EMAIL" '
   [.[] | select(
+    ((.assignee.email // "") != "" and (.assignee.email // "") == $viewerEmail) or
     (.assignee.name // "" | ascii_downcase | contains($agent | ascii_downcase)) or
     (.labels.nodes[]?.name // "" | ascii_downcase | contains($agent | ascii_downcase)) or
     (.title | ascii_downcase | contains("@" + ($agent | ascii_downcase))) or
@@ -112,7 +137,11 @@ MY_TASKS=$(echo "$ISSUES" | jq --arg agent "$AGENT_NAME" '
 MY_TASK_COUNT=$(echo "$MY_TASKS" | jq 'length')
 
 if [ "$MY_TASK_COUNT" -eq 0 ]; then
-    echo "✅ No tasks assigned to $AGENT_NAME"
+    if [ -n "$VIEWER_EMAIL" ]; then
+      echo "✅ No tasks assigned to $AGENT_NAME (viewer: $VIEWER_NAME <$VIEWER_EMAIL>)"
+    else
+      echo "✅ No tasks assigned to $AGENT_NAME"
+    fi
     
     # Update last check time
     jq --arg time "$(date -Iseconds)" '.lastCheck = $time' "$STATE_FILE" > "$STATE_FILE.tmp"
