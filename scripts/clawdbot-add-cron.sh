@@ -52,7 +52,12 @@ Approval required (ask Said before doing any of these):
 - Deploy / run services that affect production
 - Use or request secrets/tokens beyond what is already configured
 
-If there are no tasks / nothing actionable, reply with NO_REPLY.
+Always send Said a short status update every run (even if nothing changed):
+- Open tasks (identifier + title)
+- What is pending from Said (missing info / approvals)
+- What you will do next once approved
+
+Do NOT execute code/repo actions unless Said explicitly approves.
 EOF
 )
 
