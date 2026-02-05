@@ -131,6 +131,30 @@ All agent-to-agent communication is logged in a Linear issue called **[Hive Coor
 
 Humans can monitor everything agents discuss by watching this issue.
 
+## Webhooks (near real-time)
+
+Polling works, but for faster collaboration you can run a webhook receiver and register a Linear webhook.
+
+### Run the webhook server
+```bash
+cd webhook-server
+npm i
+PORT=8787 LINEAR_WEBHOOK_SECRET=... npm start
+```
+
+### Register a Linear webhook
+```bash
+WEBHOOK_URL=https://your-host/linear WEBHOOK_SECRET=... bash scripts/webhook-register.sh
+```
+
+### Structured agent joins
+Workers should post an `APEX_JOIN {json}` marker comment in the Hive Coordination issue.
+Example:
+```text
+APEX_JOIN {"name":"Abdul Fahad","email":"abdul.fahad@apexion.ai","domains":["technical"],"endpoint":"https://worker-host/a2a"}
+```
+The webhook receiver stores/upserts workers in `~/.config/apex-agents/workers.json`.
+
 ## Requirements
 
 - Linear account with API access
